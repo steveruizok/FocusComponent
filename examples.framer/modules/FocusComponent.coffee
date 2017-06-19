@@ -10,6 +10,7 @@ class FocusComponent extends Layer
 		@_toggle = options.toggle ? true
 		@_toggleLock = options.toggleLock ? false
 		@_trigger = options.trigger ? 'Tap'
+		@_release = options.release ? undefined
 		@_defaultFocused = options.states?.focused ? {opacity: 1}
 		@_defaultUnfocused = options.states?.unfocused ? if options.states?.focused? then undefined else {opacity: .5}
 		@_defaultFocus = options.focus ? -> return null
@@ -24,19 +25,30 @@ class FocusComponent extends Layer
 			size: Screen.size
 			backgroundColor: null
 
-	# notify subjects
+
+	# notify all subjects
+	notifySubjects: (func = @_defaultNotify) -> do _.bind(func, subject) for subject in @_subjects
+
+	# notify focused subjects
 	notifyFocusedSubjects: (func = @_defaultFocus) -> do _.bind(func, subject) for subject in @_focusedSubjects
 	
+	# notify unfocused subjects
 	notifyUnfocusedSubjects: (func = @_defaultUnfocus) -> do _.bind(func, subject) for subject in @_unfocusedSubjects
-	
-	notifySubjects: (func = @_defaultNotify) -> do _.bind(func, subject) for subject in @_subjects
 	
 	notifySelected: (subjects = @_subjects, func = @_defaultNotify) -> 
 		if typeof subjects is 'object' then subjects = [subjects]
 		do _.bind(func, subject) for subject in @_subjects
 
+	setFocused: (subject, bool=true, instant=false) -> _setFocused(subject, bool, instant)
+
 	# unfocus all focused subjects
 	unfocusAll: (instant = false) -> @_setFocused(subject, false, instant) for subject in @_focusedSubjects
+
+	# focus all unfocused subjects
+	focusAll: (instant = false) -> @_setFocused(subject, true, instant) for subject in @_unfocusedSubjects
+
+
+
 
 	# run focus function for subject
 	_focus: (subject) -> do _.bind(@_defaultFocus, subject)
@@ -53,8 +65,17 @@ class FocusComponent extends Layer
 		return if @_isFocused(subject) is true and @_toggle is false
 		@_setFocused(subject, true)
 
+	addRelease: (subject, eventName = @_release) -> subject.on Events[eventName], =>
+		return if @_isFocused(subject) is false
+		@_setFocused(subject, false)
+
+	removeRelease: (subject, eventName = @_trigger) -> subject.off Events[eventName], =>
+		return if @_isFocused(subject) is false
+		@_setFocused(subject, true)
+
+
 	# set focused state of a subject
-	_setFocused: (subject, bool, instant) ->
+	_setFocused: (subject, bool=true, instant=false) ->
 		# if the subject's focus state should be focused...
 		if bool is true
 			# if subject is already focused...
@@ -94,6 +115,7 @@ class FocusComponent extends Layer
 	# add a new subject to this focusComponent
 	addSubject: (newSubject, options = {}) ->
 		trigger = options.trigger ? @_trigger
+		release = options.release ? @_release
 		focused = options.focused ? false
 		focusedState = options.focusedState ? newSubject.states?.focused
 		unfocusedState = options.unfocusedState ? newSubject.states?.unfocused
@@ -103,6 +125,7 @@ class FocusComponent extends Layer
 
 		# set event trigger (event name provided in options or default event name)
 		@addTrigger(newSubject, trigger)
+		if release? then @addRelease(newSubject, release)
 
 		# set focused / unfocused layer states (states provided in options, or existing states or default states)
 		newSubject.states.focused = focusedState ? @_defaultFocused
@@ -132,6 +155,7 @@ class FocusComponent extends Layer
 		_.pull(@_subjects, subject)
 		# remove focusComponent trigger (TODO: remove all added triggers, not just most recent)
 		@removeTrigger(subject)
+		if @_release? then @removeRelease(newSubject)
 
 
 	@define "trigger",

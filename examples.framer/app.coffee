@@ -111,7 +111,7 @@ page = new Page 'basic'
 
 focus1 = new FocusComponent
 	subjects: page.buttons
-
+	
 
 
 # page 2, toggle
@@ -133,6 +133,17 @@ focus3 = new FocusComponent
 	toggleLock: true
 
 
+# trigger and release
+
+page = new Page 'basic'
+
+focus4 = new FocusComponent
+	subjects: page.buttons
+	trigger: 'SwipeUp'
+	release: 'SwipeDown'
+	toggle: false
+	toggleLock: true
+	
 
 # page 4, maxFocused
 
