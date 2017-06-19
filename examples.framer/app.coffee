@@ -1,6 +1,3 @@
-# Import file "sketch-assets"
-sketch = Framer.Importer.load("imported/sketch-assets@2x", scale: 1)
-
 # Focus Component Demo
 # @steveruizok
 
@@ -8,7 +5,12 @@ sketch = Framer.Importer.load("imported/sketch-assets@2x", scale: 1)
 
 {FocusComponent} = require 'FocusComponent'
 
+
+# Import file "sketch-assets" (images for code examples)
+sketch = Framer.Importer.load("imported/sketch-assets@2x", scale: 1)
 Framer.Extras.Preloader.enable()
+
+
 
 # PageComponent
 
@@ -43,7 +45,7 @@ nextButton = new TextLayer
 
 nextButton.onTap -> pager.snapToNextPage()
 
-# Next Button
+# Prev Button
 
 prevButton = new TextLayer
 	name: 'Previous'
@@ -56,16 +58,20 @@ prevButton = new TextLayer
 prevButton.onTap -> pager.snapToPreviousPage()
 
 # Page
+# example: myNewPage = new Page 'myCodeImage'
 
 class Page extends Layer
 	constructor: (codeImage, options = {}) ->
-		super _.defaults options,
-			frame: Screen.frame
-			backgroundColor: '#1E1E1E'
-			
+		
 		@buttons = []
 		@codeImage = codeImage ? null
 		
+		super _.defaults options,
+			name: @codeImage
+			frame: Screen.frame
+			backgroundColor: '#1E1E1E'
+		
+		# create buttons for use in examples
 		for i in [0..8]
 			@buttons[i] = new TextLayer
 				name: '.', parent: @
@@ -79,19 +85,24 @@ class Page extends Layer
 				animationOptions: 
 					time: .25
 		
+		# text layer (by default, blank)
 		@label = new TextLayer
 			name: '.', parent: @
 			x: @buttons[0].x, y: _.last(@buttons).maxY + 12
 			fontSize: 20, color: '#FFF', text: ''
 		
+		# find a sketch layer with the name provided by codeImage arugument...
 		@code = sketch?[@codeImage]
+		# and set it on this page
 		@code?.props =
-			parent: @
+			name: '.', parent: @
 			visible: true
 		
+		# add this page to pager
 		pager.addPage(@)
+		
+		# update currentPage label (e.g. 1 of 5)
 		currentPage.update()
-
 
 
 # page 1, basic focus component

@@ -10,8 +10,8 @@ class FocusComponent extends Layer
 		@_toggle = options.toggle ? true
 		@_toggleLock = options.toggleLock ? false
 		@_trigger = options.trigger ? 'Tap'
-		@states.focused = options.states?.focused ? {opacity: 1}
-		@states.undocused = options.states?.unfocused ? if options.states?.focused? then undefined else {opacity: .5}
+		@_defaultFocused = options.states?.focused ? {opacity: 1}
+		@_defaultUnfocused = options.states?.unfocused ? if options.states?.focused? then undefined else {opacity: .5}
 		@_defaultFocus = options.focus ? -> return null
 		@_defaultUnfocus = options.unfocus ? -> return null
 		@_defaultNotify = options.notify ? -> return null
@@ -36,7 +36,7 @@ class FocusComponent extends Layer
 		do _.bind(func, subject) for subject in @_subjects
 
 	# unfocus all focused subjects
-	unfocusAll: (instant = false) -> @_setFocused(false, instant) for subject in @_focusedSubjects
+	unfocusAll: (instant = false) -> @_setFocused(subject, false, instant) for subject in @_focusedSubjects
 
 	# run focus function for subject
 	_focus: (subject) -> do _.bind(@_defaultFocus, subject)
@@ -64,6 +64,9 @@ class FocusComponent extends Layer
 				# either way, return
 				return null
 
+			# cancel new focus if toggle lock is on
+			return if _.size(@_focusedSubjects) >= @_maxFocused and @_toggleLock is true
+
 			# if the subject isn't already focused, add it to focused subjects
 			@_addToFocusedSubjects(subject, instant)
 			# and if focused states are being used...
@@ -76,7 +79,7 @@ class FocusComponent extends Layer
 		# if the subject's focus state should be unfocused...
 		else
 			# if the subject is already unfocused, do nothing
-			if @_isFocused(subject) is false then return null
+			return if @_isFocused(subject) is false
 
 			# if it is, remove it from focused subjects
 			@_removeFromFocusedSubjects(subject) 
@@ -92,11 +95,11 @@ class FocusComponent extends Layer
 	addSubject: (newSubject, options = {}) ->
 		trigger = options.trigger ? @_trigger
 		focused = options.focused ? false
-		focusedState = options.states?.focused ? newSubject.states.focused
-		unfocusedState = options.states?.focused ? newSubject.states.unfocused
+		focusedState = options.focusedState ? newSubject.states?.focused
+		unfocusedState = options.unfocusedState ? newSubject.states?.unfocused
 
 		# throw an error if layer isn't a layer
-		if newSubject instanceof Layer is false then throw "Observer can only add layers to its list of subjects. #{layer}, id #{layer.id} is not a layer."
+		if newSubject instanceof Layer is false then throw "Observer can only add layers to its list of subjects. #{newSubject}, id #{newSubject.id} is not a layer."
 
 		# set event trigger (event name provided in options or default event name)
 		@addTrigger(newSubject, trigger)
@@ -134,11 +137,7 @@ class FocusComponent extends Layer
 	@define "trigger",
 		get: -> return @_trigger
 		set: (eventName) ->
-			if typeof eventName isnt 'string' then throw "FocusComponent.notify requires an event name as string, like 'Tap' or 'MouseOver'."
-			# remove current trigger from all subjects and replace with new trigger
-			@_subjects.forEach (subject), -> 
-				@removeTrigger(subject)
-				@addTrigger(subject, eventName)
+			if typeof eventName isnt 'string' then throw "FocusComponent.trigger requires an event name as string, like 'Tap' or 'MouseOver'."
 			# set trigger as default trigger, to be given to all new subjects
 			@_trigger = eventName 
 
@@ -231,20 +230,20 @@ class FocusComponent extends Layer
 			@_useFocusStates = bool
 
 
-	# get or set default focused state added to new subjects
-	@define "states.focused",
-		get: -> return @states.focused
-		set: (state = {}) -> 
-			if typeof state isnt 'object' then throw "FocusComponent.focusState requires an object (a Layer state)."
-			@states.focused = state
+	# # get or set default focused state added to new subjects
+	# @define "states.focused",
+	# 	get: -> return @states.focused
+	# 	set: (state = {}) -> 
+	# 		if typeof state isnt 'object' then throw "FocusComponent.focusState requires an object (a Layer state)."
+	# 		@states.focused = state
 
 
-	# get or set default unfocused state added to new subjects
-	@define "states.unfocused",
-		get: -> return @states.unfocused
-		set: (state = {}) -> 
-			if typeof state isnt 'object' then throw "FocusComponent.focusState requires an object (a Layer state)."
-			@states.unfocused = state
+	# # get or set default unfocused state added to new subjects
+	# @define "states.unfocused",
+	# 	get: -> return @states.unfocused
+	# 	set: (state = {}) -> 
+	# 		if typeof state isnt 'object' then throw "FocusComponent.focusState requires an object (a Layer state)."
+	# 		@states.unfocused = state
 	
 
 	# get or set the array of subjects ( needs work )
@@ -280,12 +279,10 @@ class FocusComponent extends Layer
 
 		# if we're at the limit of our focused subjects...
 		if _.size(@_focusedSubjects) >= @_maxFocused
-			return if @_toggleLock is true
-			else
-				# remove the subscribe from the front of the list and set it as unfocused
-				@_setFocused(@_focusedSubjects[0], false, instant)
-				# repeat until we have room for a new focused subject
-				@_addToFocusedSubjects(subject, instant)
+			# remove the subscribe from the front of the list and set it as unfocused
+			@_setFocused(@_focusedSubjects[0], false, instant)
+			# repeat until we have room for a new focused subject
+			@_addToFocusedSubjects(subject, instant)
 		
 		# if (or when) there is room...
 		else

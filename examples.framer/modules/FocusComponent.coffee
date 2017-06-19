@@ -36,7 +36,7 @@ class FocusComponent extends Layer
 		do _.bind(func, subject) for subject in @_subjects
 
 	# unfocus all focused subjects
-	unfocusAll: (instant = false) -> @_setFocused(false, instant) for subject in @_focusedSubjects
+	unfocusAll: (instant = false) -> @_setFocused(subject, false, instant) for subject in @_focusedSubjects
 
 	# run focus function for subject
 	_focus: (subject) -> do _.bind(@_defaultFocus, subject)
@@ -95,11 +95,11 @@ class FocusComponent extends Layer
 	addSubject: (newSubject, options = {}) ->
 		trigger = options.trigger ? @_trigger
 		focused = options.focused ? false
-		focusedState = options.focusedState ? newSubject.states.focused
-		unfocusedState = options.unfocusedState ? newSubject.states.unfocused
+		focusedState = options.focusedState ? newSubject.states?.focused
+		unfocusedState = options.unfocusedState ? newSubject.states?.unfocused
 
 		# throw an error if layer isn't a layer
-		if newSubject instanceof Layer is false then throw "Observer can only add layers to its list of subjects. #{layer}, id #{layer.id} is not a layer."
+		if newSubject instanceof Layer is false then throw "Observer can only add layers to its list of subjects. #{newSubject}, id #{newSubject.id} is not a layer."
 
 		# set event trigger (event name provided in options or default event name)
 		@addTrigger(newSubject, trigger)

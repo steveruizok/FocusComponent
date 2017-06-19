@@ -312,33 +312,6 @@ window.__imported__["sketch-assets@2x/layers.json.js"] = [
 					}
 				},
 				"children": []
-			},
-			{
-				"objectId": "E0FEAF81-190A-4CBC-9148-69386270D1E3",
-				"kind": "group",
-				"name": "background_example",
-				"originalName": "background_example",
-				"maskFrame": null,
-				"layerFrame": {
-					"x": -4,
-					"y": 363,
-					"width": 375,
-					"height": 219
-				},
-				"visible": true,
-				"metadata": {
-					"opacity": 1
-				},
-				"image": {
-					"path": "images/Layer-background_example-rtbgrufg.jpg",
-					"frame": {
-						"x": -4,
-						"y": 363,
-						"width": 375,
-						"height": 219
-					}
-				},
-				"children": []
 			}
 		]
 	}
