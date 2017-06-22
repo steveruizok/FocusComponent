@@ -22,6 +22,7 @@ class FocusComponent extends Layer
 		@_useFocusFunctions = options.useFocusFunctions ? true
 
 		super _.defaults options,
+			name: '.'
 			size: Screen.size
 			backgroundColor: null
 
@@ -47,7 +48,7 @@ class FocusComponent extends Layer
 	isFocused: (subject) -> return @_isFocused(subject)
 
 	# set a specific subject as focused or unfocused
-	setFocused: (subject, bool = true, instant = false) -> @_setFocused(subject, bool, instant)
+	setFocused: (subject, bool = true, instant = false) -> _setFocused(subject, bool, instant)
 
 	# focus all unfocused subjects
 	focusAll: (instant = false) -> @_setFocused(subject, true, instant) for subject in @_unfocusedSubjects
@@ -74,9 +75,6 @@ class FocusComponent extends Layer
 	removeRelease: (subject, eventName = @_trigger) -> subject.off Events[eventName], =>
 		return if @_isFocused(subject) is false
 		@_setFocused(subject, true)
-	
-	# get whether a layer is a subject of this FocusComponent
-	isSubject: (layer) -> return _isSubject(layer)
 
 	# add a new subject to this FocusComponent
 	addSubject: (newSubject, options = {}) ->
@@ -86,6 +84,9 @@ class FocusComponent extends Layer
 		focusedState = options.focusedState ? newSubject.states?.focused
 		unfocusedState = options.unfocusedState ? newSubject.states?.unfocused
 
+		# throw an error if layer isn't a layer
+		if newSubject instanceof Layer is false then throw "Observer can only add layers to its list of subjects. #{newSubject}, id #{newSubject.id} is not a layer."
+
 		# set event trigger (event name provided in options or default event name)
 		@addTrigger(newSubject, trigger)
 		if release? then @addRelease(newSubject, release)
@@ -94,9 +95,6 @@ class FocusComponent extends Layer
 		newSubject.states["_focused#{@_uniqId}"] = focusedState ? @_defaultFocused
 		newSubject.states["_unfocused#{@_uniqId}"] = unfocusedState ? @_defaultUnfocused ? newSubject.states.default
 
-		# store reference to this FocusComponent
-		newSubject[@name] = @
-
 		# add layer to subjects array
 		@_subjects.push(newSubject)
 
@@ -104,10 +102,10 @@ class FocusComponent extends Layer
 		if focused is true then @_setFocused(newSubject, focused, true)
 		else # create unfocused effects
 			if @_useFocusStates is true then newSubject.stateSwitch("_unfocused#{@_uniqId}")
-			# skip this # if @_useFocusFunctions is true then @_unfocus(newSubject)
+			if @_useFocusFunctions is true then @_unfocus(newSubject)
 
 		# emit an event on FocusComponent
-		@emit("change:subjects", newSubject, @_subjects)
+		@emit("change:subjects", @_subjects)
 
 	# remove a subject from this FocusComponent
 	removeSubject: (subject) ->
@@ -120,17 +118,14 @@ class FocusComponent extends Layer
 		
 		if @_isFocused(subject) then @_removeFromFocusedSubjects(subject, false)
 
-		# remove reference to this FocusComponent
-		subject[@name] = @
-
 		# remove from list of subjects
 		_.pull(@_subjects, subject)
 		# remove focusComponent trigger (TODO: remove all added triggers, not just most recent)
 		@removeTrigger(subject)
-		if @_release? then @removeRelease(subject)
+		if @_release? then @removeRelease(newSubject)
 
 		# emit an event on FocusComponent
-		@emit("change:subjects", subject, @_subjects)
+		@emit("change:subjects", @_subjects)
 
 
 	# public properties
@@ -318,9 +313,6 @@ class FocusComponent extends Layer
 
 	# get whether a subject is focused or not
 	_isFocused: (subject) -> return _.includes(@_focusedSubjects, subject)
-
-	# get whether a layer is a subject of this FocusComponent
-	_isSubject: (layer) -> return _.includes(@_subjects, layer)
 
 
 	# add a layer to array of focused subjects, making room if necessary

@@ -129,6 +129,59 @@ In addition to triggering focus changes with events, you may manually focus, unf
 | `focusComponent.notifyFocusedSubjects`   | func [function]                               | A command that will run a function for all of its focused subjects. By default, this is the FocusComponent's notify function, however you can provide a custom function as an argument.                                                                                                                                                                                                                                                                                                                                      |
 | `focusComponent.notifyUnfocusedSubjects` | func [function]                               | A command that will run a function for all of its unfocused subjects. By default, this is the FocusComponent's notify function, however you can provide a custom function as an argument.                                                                                                                                                                                                                                                                                                                                    |
 
+**Events**
+
+Finally, the FocusComponent creates several events on itself and on its subjects. When a subject gains or loses focus, it emits an event, `change:focused', which provides a boolean variable referring to whether or not the subject is focused. When a subject gains focus, its argument will be `true`, or `false` on the event created when it is unfocused. The event can be accessed in the following way:
+
+```coffeescript
+icons = []
+for i in [0..2]
+	icons[i] = new Layer
+		y: 210 * i
+		image: Utils.randomImage()
+	icons[i].on "change:focused", (isFocused) ->
+		if isFocused is true then @bringToFront()
+		else @sendToBack()
+
+focus = new FocusComponent
+	subjects: icons
+	toggleLock: true
+	states:
+		focused:
+			frame: Screen.frame
+			options:
+				curve: Spring
+```
+
+The FocusComponent iself also generates an event called `focused`. This event occurs when a subject becomes focused, returning two arguments: the subject that has gained focus, and the FocusComponent's array of focused subjects. It may be used in the following way:
+
+```coffeescript
+icons = []
+for i in [0..2]
+	icons[i] = new Layer
+		y: 210 * i
+		image: Utils.randomImage()
+
+focus = new FocusComponent
+	subjects: icons
+	toggleLock: true
+	states:
+		focused:
+			frame: Screen.frame
+			options:
+				curve: Spring
+
+focus.on "change:focused" (newFocused, focusedSubjects) ->
+	newFocused.y = 100
+	for subject in focusedSubjects
+		subject.y = 150 + (50 * i)
+
+focus.on "change:unfocused" (newUnfocused, unfocusedSubjects) ->
+	for subject in unfocusedSubjects
+		subject.y = Align.bottom
+		subject.x = 20 + (50 * i)
+```
+
 **Examples and More**
 
 The FocusComponent module provides the core functionality for a variety of UI patterns. With the exception of adding states named focused and unfocused to layers without them already, FocusComponents do not modify their subject layers. For this reason, multiple focus components can be layered on top of one another, allowing for further variety, control and complexity.

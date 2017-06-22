@@ -110,8 +110,15 @@ class Page extends Layer
 page = new Page 'basic'
 
 focus1 = new FocusComponent
+	name: 'focus1'
 	subjects: page.buttons
+	focus: -> print 'focused'
+	unfocus: -> print 'unfocused'
 	
+focus1.notifySubjects -> 
+	@on "change:focused", (isFocused) ->
+		if isFocused is true then @rotation += 90
+		else @rotation -= 180
 
 
 # page 2, toggle
@@ -139,17 +146,17 @@ page = new Page 'basic'
 
 focus4 = new FocusComponent
 	subjects: page.buttons
-	trigger: 'SwipeUp'
+	trigger: 'LongPress'
 	release: 'SwipeDown'
 	toggle: false
 	toggleLock: true
 	
 
-# page 4, maxFocused
+# page 5, maxFocused
 
 page = new Page 'maxFocused'
 
-focus4 = new FocusComponent
+focus5 = new FocusComponent
 	subjects: page.buttons
 	maxFocused: 3
 
