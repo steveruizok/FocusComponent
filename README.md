@@ -48,7 +48,7 @@ The result is a very familiar interface pattern: a group of items that can be se
 The FocusComponent is designed to be very customizable, allowing it to generate a variety of common interface patterns. The most basic are:
 
 | Property	| Type | Default | Description |
-| --- | ---| --- | --- |
+| --------- | -----| ------- | ----------- |
 | `focusComponent.toggle`              	| boolean           | `true`			| When set to `true`, focusing on focused subjects will become cause them to become unfocused. When set to `false`, focusing on focused subjects will have no effect. |
 | `focusComponent.toggleLock` 			| boolean			| `false`			| When set to `true`, focused subjects must be manually unfocused before new subjects may be focused. When set to `false`, focusing on unfocused subjects will automatically unfocus any focused subject. |
 | `focusComponent.states.focused`		| object 			| `{opacity: 1}`	| This defines the state that subjects should animate to when they become focused. |
