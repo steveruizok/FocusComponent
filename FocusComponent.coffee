@@ -302,12 +302,12 @@ class FocusComponent extends Layer
 			# if the subject is already unfocused... do nothing
 			return if @_isFocused(subject) is false
 
-			# if the subject is focused, remove it from focused subjects
-			@_removeFromFocusedSubjects(subject, instant) 
-
 			# emit an event on the subject
 			subject.emit("change:focused", bool)
 
+			# if the subject is focused, remove it from focused subjects
+			@_removeFromFocusedSubjects(subject, instant) 
+			
 			# and if focused states are being used...
 			if @_useFocusStates is true
 				# either switch or animate to the unfocused state, depending on the instant argument
